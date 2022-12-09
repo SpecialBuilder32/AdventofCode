@@ -38,11 +38,11 @@ for _ in range(4):
             j+=1
 
 num_visible = width**2 - np.sum(visibility, axis=(0,1))
-# plt.imshow(forest)
-# plt.colorbar()
-# plt.show()
-# plt.imshow(visibility)
-# plt.show()
+plt.imshow(forest)
+plt.colorbar()
+plt.show()
+plt.imshow(visibility)
+plt.show()
 print(f'The total number of visible trees in the forest is {num_visible}')
 
 # Pt 2 - step through and calculate scenic scores
