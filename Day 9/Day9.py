@@ -73,3 +73,9 @@ for line in lines:
 
 # total visited spaces
 print(f'Total spaces visited by the longer tail: {len(visited_spaces)}')
+
+import matplotlib.pyplot as plt
+xi = [a[0] for a in visited_spaces]
+yi = [a[1] for a in visited_spaces]
+plt.scatter(xi, yi)
+plt.show()
