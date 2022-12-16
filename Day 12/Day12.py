@@ -5,8 +5,9 @@
     # 6:07p - 6:44p
     # 9:10p
 # Pt 1 End Time: 11:05a (14th) - epiphany in the shower about what was wrong
-# Pt 2 End Time: 
-# Total Time
+    # 1:26am
+# Pt 2 End Time: 1:37a
+# Total Time: 3hr (on record... took longer by far)
 
 # pathfinding up a height map :tada:
     # looking for the shortest possible path
@@ -70,58 +71,72 @@ def display_map_conversion(checked_nodes, expand):
     display += '\r'
     return display
 
-# do A*
-    # since we don't need the actual path, just the length we can save on memory
-frontier = [(start, 0)] # format: tuple(numpy coords, true cost from start)
-checked_nodes = np.full((rows, cols), fill_value=False, dtype=bool)
-checked_nodes_cost = np.full((rows, cols), fill_value=-1, dtype=int)
+def do_a_star(start) -> int: # returns path length
+    # do A*
+        # since we don't need the actual path, just the length we can save on memory
+    frontier = [(start, 0)] # format: tuple(numpy coords, true cost from start)
+    checked_nodes = np.full((rows, cols), fill_value=False, dtype=bool)
+    checked_nodes_cost = np.full((rows, cols), fill_value=-1, dtype=int)
 
-expandable_directions = (np.array((1,0)), np.array((-1,0)), np.array((0,1)), np.array((0,-1)))
+    expandable_directions = (np.array((1,0)), np.array((-1,0)), np.array((0,1)), np.array((0,-1)))
 
-peak_not_found = True
-while peak_not_found:
-    # identify lowest-cost-neighbor to expand
-    min_idx = frontier.index(min(frontier, key=lambda a: node_heuristic(a[0], end)+a[1]))
-    # frontier.sort(key=lambda a: node_heuristic(a[0], end)+a[1])
-    expand = frontier.pop(min_idx) # expand the lowest-cost frontier member
+    peak_not_found = True
+    while peak_not_found:
+        # identify lowest-cost-neighbor to expand
+        min_idx = frontier.index(min(frontier, key=lambda a: node_heuristic(a[0], end)+a[1]))
+        # frontier.sort(key=lambda a: node_heuristic(a[0], end)+a[1])
+        expand = frontier.pop(min_idx) # expand the lowest-cost frontier member
 
-    # check completion
-    if np.array_equal(expand[0], end):
-        print(f'The shortest possible path takes {expand[1]} steps')
-        peak_not_found = False
-        break
+        # check completion
+        if np.array_equal(expand[0], end):
+            peak_not_found = False
+            return expand[1]
 
-    for direc in expandable_directions:
-        if within_map(neighbor := tuple(expand[0]+direc)) \
-            and heightmap[neighbor]-1 <= heightmap[expand[0]]:
+        for direc in expandable_directions:
+            if within_map(neighbor := tuple(expand[0]+direc)) \
+                and heightmap[neighbor]-1 <= heightmap[expand[0]]:
 
-            # if the neighbor was already checked but from a higher cost path
-            if checked_nodes[neighbor] and checked_nodes_cost[neighbor]>expand[1]+1:
-                # reopen the node for evaluation
-                frontier.append((neighbor, expand[1]+1))
-                checked_nodes[neighbor] = False
-                continue # skip the other checks
+                # if the neighbor was already checked but from a higher cost path
+                if checked_nodes[neighbor] and checked_nodes_cost[neighbor]>expand[1]+1:
+                    # reopen the node for evaluation
+                    frontier.append((neighbor, expand[1]+1))
+                    checked_nodes[neighbor] = False
+                    continue # skip the other checks
 
-            # if neighbor is not already in the frontier
-            if not checked_nodes[neighbor] and neighbor not in [a[0] for a in frontier]:
-                # aadjacent square is a graph neighbor
-                frontier.append((neighbor, expand[1]+1))
-                continue
+                # if neighbor is not already in the frontier
+                if not checked_nodes[neighbor] and neighbor not in [a[0] for a in frontier]:
+                    # aadjacent square is a graph neighbor
+                    frontier.append((neighbor, expand[1]+1))
+                    continue
 
-            # if neighbor is already in the frontier but under a higher cost
-            if neighbor in (frontier_coords := [a[0] for a in frontier]) \
-                and frontier[ (idx := frontier_coords.index(neighbor)) ][1] > expand[1]+1:
-                # update cost of frontier member
-                frontier[idx] = (neighbor, expand[1]+1)
+                # if neighbor is already in the frontier but under a higher cost
+                if neighbor in (frontier_coords := [a[0] for a in frontier]) \
+                    and frontier[ (idx := frontier_coords.index(neighbor)) ][1] > expand[1]+1:
+                    # update cost of frontier member
+                    frontier[idx] = (neighbor, expand[1]+1)
 
-    checked_nodes[expand[0]] = True # mark as explored
-    checked_nodes_cost[expand[0]] = expand[1]
+        checked_nodes[expand[0]] = True # mark as explored
+        checked_nodes_cost[expand[0]] = expand[1]
 
-    # printing
-    # print(display_map_conversion(checked_nodes, expand))
-    # time.sleep(0.01)
+        # printing
+        # print(display_map_conversion(checked_nodes, expand))
+        # time.sleep(0.01)
 
+pt1_sol = do_a_star(start)
+print(f'The shortest possible path from start takes {pt1_sol} steps')
+
+
+# Pt 2 - Shortest path from every a
+    # looking at the input, the only places we could start are all the a's on the furthest left column
+    # so we run a* on all of those and find the shortest route
+
+pt2_sol = cols*10 # arbitrary too-large starting number
+for r in range(rows):
+    print(f'\tchecking row {r} / {rows}')
+    r_start = (r,0)
+    r_sol = do_a_star(r_start)
+
+    if r_sol < pt2_sol: # keep shortest path
+        pt2_sol = r_sol
     
-
-
-            
+print(f'The shortest possible path from any start takes {pt2_sol} steps')
