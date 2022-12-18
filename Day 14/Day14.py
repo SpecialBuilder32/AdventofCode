@@ -3,8 +3,8 @@
 # Start Time: 5:44p (17th)
     # pause 6:41p - 7:39p
 # Pt 1 End Time: 8:48p
-# Pt 2 End Time:
-# Total Time:
+# Pt 2 End Time: 9:33p
+# Total Time: 2hr51min
 
 # kinda-particle sim-thing today with sand. 
 
@@ -60,34 +60,64 @@ for line in lines:
 
             grid[ly:ry+1, lx:rx+1] = True
         last_i_coord = i_coord
-print(printable_grid(grid))
+# print(printable_grid(grid))
 
 # Pt 1 - Simulate falling sand
-fall_directions = [(1,0), (1,-1), (1,+1)] # priority of different motions
-sand_hit_void = False
-sand_inflow = np.array((0, 500-min_x+edge))
-units_of_sand = 0
+def simulate_sand(start_grid, stop_condition, inlet, printing=False):
+    grid = start_grid.copy() #pylint: disable=redefined-outer-name
+    fall_directions = [(1,0), (1,-1), (1,+1)] # priority of different motions
+    stop_condition_met = False
+    sand_inflow = np.array(inlet)
+    units_of_sand = 0
 
-while not sand_hit_void:
-    sand_particle = sand_inflow.copy()
-    at_rest = False
+    while not stop_condition_met:
+        sand_particle = sand_inflow.copy()
+        at_rest = False
 
-    while not at_rest:
-        for direc in fall_directions:
-            if not grid[tuple(new_space := sand_particle+direc)]:
-                # if the direction is available
-                sand_particle = new_space # move the particle
+        while not at_rest:
+            for direc in fall_directions:
+                if not grid[tuple(new_space := sand_particle+direc)]:
+                    # if the direction is available
+                    sand_particle = new_space # move the particle
 
-                if sand_particle[0] >= max_y: # we've reached the void!
-                    sand_hit_void = True
-                    at_rest = True
-                    
-                break # skip checking more directions
-            
-        else: # if no motion was applied (ie break didn't execute)
-            # particle is now at rest
-            at_rest = True
-            grid[tuple(sand_particle)] = True # space is now occupied
-            units_of_sand += 1
+                    if stop_condition(sand_particle): # we've reached the void!
+                        stop_condition_met = True
+                        at_rest = True
+                        
+                    break # skip checking more directions
+                
+            else: # if no motion was applied (ie break didn't execute)
+                # particle is now at rest
+                at_rest = True
+                grid[tuple(sand_particle)] = True # space is now occupied
+                units_of_sand += 1
 
-print(f'{units_of_sand} units of sand fell before filling the space')
+                if grid[inlet]: # if the inlet is now blocked, end sim
+                    stop_condition_met = True
+
+        if printing:
+            print(printable_grid(grid))
+    return units_of_sand
+
+sand_hit_void = lambda sand_particle: sand_particle[0] >= max_y
+pt1 = simulate_sand(grid, sand_hit_void, (0, 500-min_x+edge))
+
+print(f'{pt1} units of sand fell before falling into the void')
+
+# Pt 2 - Now there isn't an endless void, now there's a floor.
+
+# we may need more columns to account for the pyramid of sand that will be forming
+needed_l_pad = max( y_size-(500-min_x), 0) 
+needed_r_pad = max( y_size-(max_x-500), 0)
+l_pad = np.full((y_size, needed_l_pad), False, dtype=bool)
+r_pad = np.full((y_size, needed_r_pad), False, dtype=bool)
+
+wider_grid = np.hstack((l_pad, grid, r_pad))
+grid_with_floor = np.vstack((wider_grid, np.full(x_size+needed_l_pad+needed_r_pad, True, dtype=bool)))
+
+# completion condition
+room_full_of_sand = lambda a: None
+    # no condition, let simulation run to completion
+
+pt2 = simulate_sand(grid_with_floor, room_full_of_sand, (0, 500-min_x+edge+needed_l_pad))
+print(f'{pt2} units of sand fell before filling the space entirely')
