@@ -11,6 +11,8 @@ from functools import cmp_to_key
 
 # Parse input
     # we're going to to the unsafe-option and use eval, since the input is in a python-friendly syntax
+# pylint: disable=eval-used
+# pylint: disable=redefined-outer-name
 
 pairs = []
 packets = []
