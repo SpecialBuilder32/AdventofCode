@@ -3,8 +3,8 @@
 # Start Time: 4:30p (22nd)
     # pause 5:33p - 7:52p
 # Pt 1 End: 8:24p
-# Pt 2 End: 
-# Total Time:
+# Pt 2 End: 9:58p
+# Total Time: 2hr 57min
 
 # Sortof anti-triangulation
 
@@ -72,31 +72,32 @@ def scan_row(row_y, hole_search=False, search_area=(SensorData.min_x, SensorData
             col_x += 1
     return occupied_spaces, hole_x
 
-# INTEREST_ROW = 10
-INTEREST_ROW = 2000000
-pt1_sol, _ = scan_row(INTEREST_ROW)
-print(f'Number of spaces in row {INTEREST_ROW} where a beacon cannot be is {pt1_sol}')
+if __name__ == '__main__':
+    # INTEREST_ROW = 10
+    INTEREST_ROW = 2000000
+    pt1_sol, _ = scan_row(INTEREST_ROW)
+    print(f'Number of spaces in row {INTEREST_ROW} where a beacon cannot be is {pt1_sol}')
 
-# Pt 2 - Now we search the entire grid for the only possible place the missing beacon could be.
-    # ie the only space our sensors don't cover
+    # Pt 2 - Now we search the entire grid for the only possible place the missing beacon could be.
+        # ie the only space our sensors don't cover
 
-# search_area = (0,20)
-search_area = (0,4000000)
-for row_y in range(*search_area):
-    # on the big grid this takes ages. 4milx4mil is a huge space to search, even if
-        # each row individually is quite fast. 
-    print(f'\tsearching row {row_y}...')
-    _, found_hole_x = scan_row(row_y, hole_search=True, search_area=search_area)
-    if found_hole_x is not None:
-        # we've found the hole!
-        found_hole = (found_hole_x, row_y)
-        break
+    # search_area = (0,20)
+    search_area = (0,4000000)
+    for row_y in range(*search_area):
+        # on the big grid this takes ages. 4milx4mil is a huge space to search, even if
+            # each row individually is quite fast. 
+        print(f'\tsearching row {row_y}...')
+        _, found_hole_x = scan_row(row_y, hole_search=True, search_area=search_area)
+        if found_hole_x is not None:
+            # we've found the hole!
+            found_hole = (found_hole_x, row_y)
+            break
 
-# solution value (tuning frequency)
-pt2_sol = found_hole[0]*4000000 + found_hole[1]
-print(f'The only hole in the search grid is at {found_hole} with tuning frequency of {pt2_sol}')
-    # after long compute the solution found was : 
-        # The only hole in the search grid is at (2673432, 3308112) with tuning frequency of 10693731308112
+    # solution value (tuning frequency)
+    pt2_sol = found_hole[0]*4000000 + found_hole[1]
+    print(f'The only hole in the search grid is at {found_hole} with tuning frequency of {pt2_sol}')
+        # after long compute the solution found was : 
+            # The only hole in the search grid is at (2673432, 3308112) with tuning frequency of 10693731308112
 
-    # For fun I'm going to try and make a new geometry-intersection method to 
-    # solve this problem within a reasonable amount of time (while the brute force method runs)
+        # For fun I'm going to try and make a new geometry-intersection method to 
+        # solve this problem within a reasonable amount of time (while the brute force method runs)
