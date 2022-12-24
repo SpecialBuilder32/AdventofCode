@@ -4,7 +4,9 @@
     # pause 3:07p - 4:17p
     # pause 5:14p - 6:15p
 # Pt 1 End: 6:34p
-# Pt 2 End:
+    # pause 6:57p - 9:27p
+    # pause 12:45a - ? (mostly compute)
+# Pt 2 End: 
 # Total Time: 
 
 # this is maybe the most complicated problem so far. It is an optimization problem and a 
@@ -16,6 +18,7 @@
     # steam, then that would be very difficult and we'd have to resort to non-exact solutions
     # to approximate the maximum.
 
+from itertools import permutations
 import re
 from dataclasses import dataclass
 from math import factorial
@@ -82,7 +85,6 @@ class Path():
 # Loop through the paths expanding the possibilities
 paths = [Path((START,), 0, 0)]
 completed_paths = []
-cond = True
 while len(paths) > 0:
     new_paths = []
     for path in paths:
@@ -111,3 +113,102 @@ print(f'Computed {len(completed_paths)} possible paths')
 # locate the path with the most steam
 optimal_path = max(completed_paths, key=lambda e: e.steam)
 print(f'The optimal path {optimal_path.valve_sequence} releases {optimal_path.steam} steam in 30 mins')
+
+
+
+# Pt 2 - Now we train an.. uh elephant.. to help me open valves. There are two agents in this navigation
+@dataclass
+class PartnerPath():
+    agents: tuple
+
+# this is a different algorithm, so I'm not going to refactor the previous code into this 
+    # solution, even though it will be somewhat similar
+paths = [PartnerPath((
+            Path((START,), 0, 0),
+            Path((START,), 0, 0)
+        ))]
+completed_paths = []
+MAX_TIME = 26 # it took 4 minutes to teach the elephant
+
+# we're going to asyncronously make decisions about which valve each agent will proceed to next
+    # the agent with the least time spent doing things always makes the next branching decision,
+    # but cannot target the space that the other agent is already moving to open
+
+# additionally, I need some upper-bound on solutions to be able to throw out bad solutions early
+    # rather than compute them all to completion (too much space complexity)
+    # a good upper bound on a solution's steam would be if all the closed valves were opened right now.
+    # if another path has an actual steam value higher than that, theres no way this is the optima
+completed_paths = []
+highest_steam = 0
+while len(paths) > 0:
+    new_paths = []
+    for path in paths:
+        # figure out which agent needs to make a decision
+        decision_maker = sorted(path.agents, key=lambda e: e.spent_time)
+            # 0th element is the agent - with shortest time spent
+        decision_makers = 1
+        if decision_maker[0].spent_time == decision_maker[1].spent_time:
+            decision_makers = 2
+
+        # compute distances from elephant and human
+        distances = [None,] *2
+        for i, agent in enumerate(decision_maker):
+            distances[i] = ( compute_distances(agent.valve_sequence[-1], graph) )
+
+        # list of valves visited (or being moved to) by both human and elephant
+        partner_selected_valves = (*decision_maker[0].valve_sequence, *decision_maker[1].valve_sequence)
+        remaining_valves = [v for v in usable_valves.values() if v.name not in partner_selected_valves]
+
+        # early throw-out of path. If max steam is already lower than another paths steam
+        upper_limit_remaining_steam = 0
+        remaining_time = MAX_TIME - decision_maker[0].spent_time
+        for valve in remaining_valves:
+            upper_limit_remaining_steam += remaining_time*valve.flowrate
+        ideal_max_steam = upper_limit_remaining_steam + path.agents[0].steam + path.agents[1].steam
+
+        if ideal_max_steam < highest_steam: # even if we opened all the remaining valves now, we can't beat the current best
+            continue # skip to expanding the next path
+
+        # generate possible branch paths from this point, applied to the decision maker(s)
+        no_valves_left = True
+        for option in permutations(remaining_valves, r=decision_makers):
+                # permutations ensures all posibilities when both are decision makers
+            no_valves_left = False
+            # generate new path with this possibility
+            no_reachable_valves = False
+            generated_path = list(decision_maker)
+            for i, target_valve in enumerate(option): # for each decision maker
+                # can we get there in time
+                time_to_reach = distances[i][target_valve.name]
+                time_open = MAX_TIME - time_to_reach - OPENING_TIME - decision_maker[i].spent_time
+                if time_open <= 0: # no we can't open it in time
+                    no_reachable_valves = True
+                    break # don't bother to check the other decison maker, if one exists
+                
+                # set next destination to path
+                generated_path[i] = Path(
+                    valve_sequence=(*decision_maker[i].valve_sequence, target_valve.name), 
+                    steam=decision_maker[i].steam + time_open*target_valve.flowrate,
+                    spent_time=decision_maker[i].spent_time + time_to_reach + OPENING_TIME
+                )
+
+            if no_reachable_valves:# we can't open any more valves
+                completed_paths.append(PartnerPath(tuple(decision_maker)))
+            else:
+                new_paths.append(PartnerPath(tuple(generated_path)))
+                # update the running highest steam
+                if (new_highest:=generated_path[0].steam + generated_path[1].steam) > highest_steam:
+                    highest_steam = new_highest
+
+        if no_valves_left: # no valves are left to look at
+            completed_paths.append(PartnerPath(tuple(decision_maker)))
+    paths = new_paths
+    print(len(completed_paths))
+        
+# locate optimal path
+optimal_partner_path = max(completed_paths, key=lambda e: e.agents[0].steam + e.agents[1].steam)
+optimal_partner_steam = optimal_partner_path.agents[0].steam + optimal_partner_path.agents[1].steam
+
+print(f'\nOptimal elephant-employing route releases {optimal_partner_steam} steam, following the route \n\t{optimal_partner_path.agents[0].valve_sequence}, {optimal_partner_path.agents[1].valve_sequence}')
+# even with the early-quit on paths it still took over an hour to compute
+    # solution : 2999 steam - Yes the elephant is worth it
