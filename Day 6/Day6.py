@@ -36,6 +36,7 @@ with open("Day 6/Day6_Input.txt", "r") as f:
         ahead_loc = (curr_loc + facing).flatten()
         if within_room(ahead_loc) and room[tuple(ahead_loc)] in ("#", "O"):
             facing = (np.array([[0,1],[-1,0]])@facing.T).T
+            return facing # don't advance if we just turned
         if facing_mark:
             if np.all(facing == (-1,0)):
                 mark = "↑"
@@ -121,16 +122,16 @@ with open("Day 6/Day6_Input.txt", "r") as f:
                (np.all(branch_facing == (0,-1)) and branch_room[tuple(branch_loc.flatten())] == "←") or \
                 (np.all(branch_loc == curr_loc) and np.all(branch_facing == facing)): # check for cases where the loop is so small our memory gets overwritten
                 loop_counter += 1
+                # np.savetxt("Day 6/DEBUG.txt", branch_room, fmt="%s", encoding="UTF-8")
                 break
 
             # otherwise continue stepping the branch
             branch_facing = step_turtle(branch_room, branch_loc, branch_facing, True)
-            pprint_room(branch_room, branch_loc)
-            time.sleep(0.2)
+            # pprint_room(branch_room, branch_loc)
 
-        time.sleep(2)
+        # time.sleep(2)
         facing = step_turtle(room, curr_loc, facing, True)
-        pprint_room(room, curr_loc)
+        # pprint_room(room, curr_loc)
         print(f"loop number {i}/{visited_locs}")
     
     print(f"total possible loop-inducing obstacles: {loop_counter}")
