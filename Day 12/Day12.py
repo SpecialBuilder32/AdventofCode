@@ -8,6 +8,8 @@
 
 # Total Time: 
 
+import itertools
+
 
 # Part 1 - Area and perimeter calculations
 garden = []
@@ -22,7 +24,8 @@ def b_get(i,j,grid):
 
 # search the grid for regions
 searched = set()   
-tol_price =0
+tol_price = 0
+eff_price = 0
 for row_i in range(len(garden)):
     for col_j in range(len(garden[0])):
         if (row_i, col_j) in searched:
@@ -33,6 +36,7 @@ for row_i in range(len(garden)):
         area = 0
         perim = 0
         region = set()
+        boundary = set()
 
         while len(horiz) > 0:
             new_horiz = []
@@ -49,14 +53,37 @@ for row_i in range(len(garden)):
                 
                 else: # different plant or outside the grid
                     perim += 1
+                    boundary.add((i,j))
             horiz = new_horiz
-        # print(region)
-        # print(f"{area=}, {perim=}")
         
+        # Part 2 - loop through identified region and count corners
+        corners = 0
+        for ei, ej in region:
+            for (ai,aj),(bi,bj) in itertools.pairwise([(1,0),(0,1),(-1,0),(0,-1),(1,0)]):
+                if b_get(ei+ai,ej+aj,garden) != plant and b_get(ei+bi,ej+bj,garden) != plant:
+                    # exterior corner
+                    corners += 1
+        for ei,ej in boundary:
+            for (ai,aj),(bi,bj) in itertools.pairwise([(1,0),(0,1),(-1,0),(0,-1),(1,0)]):
+                if b_get(ei+ai,ej+aj,garden) == plant and b_get(ei+bi,ej+bj,garden) == plant:
+                    # interior corner
+                    corners += 1
+        # print(f"plot {plant} has {corners} corners")
+
         searched.update(region)
+        
         price = perim * area
         tol_price += price
 
+        price = corners * area
+        eff_price += price
+
 print(f"final fence pricing: ${tol_price}")
+print(f"final bulk pricing: ${eff_price}")
 
 # Part 2 - neighbor aware straightn-ess counting
+    # we're instead counting the number of corners, which == edges in a closed shape
+
+    # added inline to existing field traverser
+
+# TODO deal with the warned condition of two intertior regions touching!!!
