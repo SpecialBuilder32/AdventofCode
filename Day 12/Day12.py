@@ -4,9 +4,9 @@
 
 # Pt 1 End Time: 11:23 AM (switch from recursion to BFS took time)
                     # 11:54 Think time
-# Pt 2 End Time:
+# Pt 2 End Time: 7:33 PM
 
-# Total Time: 
+# Total Time: 47 Min (pt 1), untracked (pt 2)
 
 import itertools
 
@@ -60,12 +60,14 @@ for row_i in range(len(garden)):
         corners = 0
         for ei, ej in region:
             for (ai,aj),(bi,bj) in itertools.pairwise([(1,0),(0,1),(-1,0),(0,-1),(1,0)]):
-                if b_get(ei+ai,ej+aj,garden) != plant and b_get(ei+bi,ej+bj,garden) != plant:
+                if b_get(ei+ai,ej+aj,garden) != plant and b_get(ei+bi,ej+bj,garden) != plant \
+                    and (ei+ai+bi, ej+aj+bj) not in region: # check for touching exterior corners and prevent overcounting
                     # exterior corner
                     corners += 1
         for ei,ej in boundary:
             for (ai,aj),(bi,bj) in itertools.pairwise([(1,0),(0,1),(-1,0),(0,-1),(1,0)]):
-                if b_get(ei+ai,ej+aj,garden) == plant and b_get(ei+bi,ej+bj,garden) == plant:
+                if b_get(ei+ai,ej+aj,garden) == plant and b_get(ei+bi,ej+bj,garden) == plant \
+                    and (ei+ai,ej+aj) in region and (ei+bi,ej+bj) in region: # check for a corner-touching region of the same plant id
                     # interior corner
                     corners += 1
         # print(f"plot {plant} has {corners} corners")
@@ -85,5 +87,3 @@ print(f"final bulk pricing: ${eff_price}")
     # we're instead counting the number of corners, which == edges in a closed shape
 
     # added inline to existing field traverser
-
-# TODO deal with the warned condition of two intertior regions touching!!!
