@@ -97,34 +97,55 @@ print(f"Program outputs: \n {prog_output}")
 
 
 ## Part 2 - now we run this machine a until we find a static input-output program pair!
-initA = 0
-while True:
-    # print(f"trying regA = {initA}")
-    regA = initA
-    inst = 0
-    stout.clear()
+# initA = 0
+# while True:
+#     # print(f"trying regA = {initA}")
+#     regA = initA
+#     inst = 0
+#     stout.clear()
     
-    while True:
-        try:
-            OpCode[prog[inst]](prog[inst+1])
-            inst += 2
-        except IndexError:
-            # valid end of program
-            break
+#     while True:
+#         try:
+#             OpCode[prog[inst]](prog[inst+1])
+#             inst += 2
+#         except IndexError:
+#             # valid end of program
+#             break
 
-        # can we quit early (incase of infinite loops?)
-        if stout:
-            i = len(stout)-1
-            if stout[i] != prog[i]:
-                break
+#         # can we quit early (incase of infinite loops?)
+#         if stout:
+#             i = len(stout)-1
+#             if stout[i] != prog[i]:
+#                 break
 
 
-    if stout==prog:
-        # we've found the static pair!
-        print(f"initial register A value for input->output: {initA}")
-        break
+#     if stout==prog:
+#         # we've found the static pair!
+#         print(f"initial register A value for input->output: {initA}")
+#         break
 
-    initA += 1 # try the next value
+#     initA += 1 # try the next value
 
     ## Well damn its such a big number that even with the early quits checking every number is taking more than 30 mins.
         # we need a different approach
+
+
+# Alright so instead I did a manual translation of the program input we're running, and it is essentially taking X bits from the initial regA value to produce each output. 
+# so with some reverse engineering, we can figure the bits of the initial regA required to make the desired output. This WILL NOT be generic! and only work on my specific
+# program, so unless everyone's program follows mostly the same structure, my solution will not solve theirs.
+
+# program: bst(A), bxl(5), cdv(B), bxl(6), adv(3), bxc, out(B), jnz(0)
+
+# This solution heavily references by-hand notes in my remarkable. 
+
+# form digit -> possible input table\
+d_table = {}
+for B1 in [2]:
+    C2 = list(range(8))
+    B2 = list((B1^C2 for C2 in C2)) # index C -> B2
+    B3 = list((B2^6 for B2 in B2)) # index C -> B3
+    B4 = list((B3^5 for B3 in B3)) # index C -> B4
+
+    for i in range(8):
+        Ai = C2[i]<<B3[i] + B4[i]
+        print(Ai)
