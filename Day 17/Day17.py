@@ -138,14 +138,52 @@ print(f"Program outputs: \n {prog_output}")
 
 # This solution heavily references by-hand notes in my remarkable. 
 
-# form digit -> possible input table\
+# form digit -> possible input table
 d_table = {}
-for B1 in [2]:
+for B1 in range(8):
     C2 = list(range(8))
     B2 = list((B1^C2 for C2 in C2)) # index C -> B2
     B3 = list((B2^6 for B2 in B2)) # index C -> B3
     B4 = list((B3^5 for B3 in B3)) # index C -> B4
 
+    d_table[B1] = []
     for i in range(8):
-        Ai = C2[i]<<B3[i] + B4[i]
-        print(Ai)
+        if B3[i] < 3: # we need to check if a valid "overlap" exists
+            x = C2[i] & B3[i] # least n bits of C
+            y = B4[i]>>B3[i] # most n bits of B
+            if x==y: # overlap is the same - a valid number exists here
+                d_table[B1].append( (C2[i]<<B3[i]) | B4[i] )
+        else: # normal shifting is find
+            d_table[B1].append( (C2[i]<<B3[i]) + B4[i] )
+
+        # NOTE after running, turns out the overlap case here never happens! All 3 cases with smaller shifts are invalid values. 
+        # ... but I'll leave the code here because i'll need it for the next part
+        # ... except I found a better method to check by using bitwise operators
+
+# find a combination of values that is valid for the fixed bitshift of each
+from itertools import product
+from math import log2, floor
+solutions: list[list[int]] = [[]]
+for i, outd in enumerate(prog[:3]):
+    last_solutions = solutions.copy()
+    solutions.clear()
+
+    # branch solutions for each new number
+    for Ai, sol in product(d_table[outd], last_solutions):
+        solutions.append([Ai] + sol)
+    print(solutions)
+
+    # filter solutions to remove invalids
+    for sol in solutions.copy():
+        # we only need to check the latest digit against each other, the prior couplings will be checked on prior loops
+        x = sol[0]
+        for i, y in enumerate(sol[1:]):
+            if not x % 2**(floor(log2(y))-(3*(i+1))) == y >> (3*(i+1)):
+                # invalid! we can drop this solution
+                print(f"{bin(x)} invalid with {bin(y)} upon << {(i+1)*3}")
+                solutions.remove(sol)
+                break
+            else:
+                print(f"{bin(x)} VALID with {bin(y)} upon << {(i+1)*3}")
+
+    print(solutions)
