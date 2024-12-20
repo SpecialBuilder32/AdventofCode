@@ -153,8 +153,9 @@ for B1 in range(8):
             y = B4[i]>>B3[i] # most n bits of B
             if x==y: # overlap is the same - a valid number exists here
                 d_table[B1].append( (C2[i]<<B3[i]) | B4[i] )
-        else: # normal shifting is find
-            d_table[B1].append( (C2[i]<<B3[i]) + B4[i] )
+        else: # normal shifting is fine
+            for k in range(2**(B3[i]-3)):
+                d_table[B1].append( (C2[i]<<B3[i]) + (k<<3) + (B4[i]) )
 
         # NOTE after running, turns out the overlap case here never happens! All 3 cases with smaller shifts are invalid values. 
         # ... but I'll leave the code here because i'll need it for the next part
@@ -171,19 +172,21 @@ for i, outd in enumerate(prog[:3]):
     # branch solutions for each new number
     for Ai, sol in product(d_table[outd], last_solutions):
         solutions.append([Ai] + sol)
-    print(solutions)
+    # print(solutions)
 
     # filter solutions to remove invalids
     for sol in solutions.copy():
         # we only need to check the latest digit against each other, the prior couplings will be checked on prior loops
         x = sol[0]
+        # print(f"for sol {sol}")
         for i, y in enumerate(sol[1:]):
+            # print(f"checking {y=}")
             if not x % 2**(floor(log2(y))-(3*(i+1))) == y >> (3*(i+1)):
                 # invalid! we can drop this solution
-                print(f"{bin(x)} invalid with {bin(y)} upon << {(i+1)*3}")
+                # print(f"{bin(x)} invalid with {bin(y)} upon << {(i+1)*3}")
                 solutions.remove(sol)
                 break
             else:
                 print(f"{bin(x)} VALID with {bin(y)} upon << {(i+1)*3}")
 
-    print(solutions)
+    # print(solutions)
