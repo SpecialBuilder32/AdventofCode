@@ -2,6 +2,7 @@
 
 # Start Time: 8:33 AM - 10:10 AM
                 # 1:30 - 1:44 PM (after getting advice from Misode/MCC and redesigning)
+                # 2:00 PM -> 2:30 PM
 # Pt 1 End Time: 
 # Pt 2 End Time:
 
@@ -40,3 +41,18 @@ for pattern in patterns:
 
 print(f"There are {count} possible patterns!")
 
+## Part 2 - Now for counting the number of possible ways to make each pattern
+    # which we absolutely will not be doing by counting the prior way, but rather with permutations on sub-sections
+
+@cache
+def count_possible(pattern: str) -> int:
+    # recursively count how many ways there are to make the given pattern
+    if not check_possible(pattern):
+        return 0
+    sum = 0
+    for n in range(1, len(pattern)):
+        sum += count_possible(pattern[:n]) * count_possible(pattern[n:])
+    return sum
+
+print(count_possible('rrbgbr'))
+    
