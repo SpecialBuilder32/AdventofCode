@@ -3,9 +3,9 @@
 # Start Time: 12:14 AM
 
 # Pt 1 End Time: 12:24 AM
-# Pt 2 End Time: 
+# Pt 2 End Time: 8:40 PM, the next day
 
-# Total Time: 
+# Total Time: ~ 2 hr
 
 import numpy as np
 # Part 1 - psudorandom sequence generating
@@ -59,35 +59,30 @@ print(f"sum of 2000th secret numbers is {secret_sum}")
 # next calculate differences in price-over-time
 diffs = np.diff(prices, axis=1)
 
-from itertools import product
-from alive_progress import alive_bar
-# to get the absolute max sequence, we need to exhaustively check every possible sequence... lets hope that
-    # takes not too long
-best_seq = ()
-best_haul = 0 # banannas
-with alive_bar(73440) as bar:
-    for seq in product(range(-9,9), repeat=4): # there are 73000 sequences to check. Ugh
-        # is this sequence impossible? If so we can skip!
-        if np.any(np.abs(np.cumsum(seq)) > 9):
-            bar(skipped=True) # exclude this from ETA calculation
+# for each seller, precompute the number of bananas each sequence will get and store in a map for lookup
+seller_map: list[dict[tuple, int]] = []
+for i, seller in enumerate(diffs):
+    seller_map.insert(i, {})
+    for j in range(len(seller)-4, 0, -1):
+        seller_map[i][tuple(seller[j:j+4])] = prices[i,j+4]
+print("...completed sequence map")
+
+# run through sequences until we find the best one
+checked_seqs = set()
+best_price = 0
+for seller in seller_map:
+    for seq, price in seller.items():
+        if seq in checked_seqs:
             continue
-
-        # now check the prices for this sequence
-        price = 0
-        for i, seller_diffs in enumerate(diffs):
-            for j in range(len(seller_diffs)-4):
-                if np.all(seller_diffs[j:j+4] == seq):
-                    # an instance of this sequence
-                    price += prices[i, j+4]
-                    break # we've bought from this seller, onto the next
-        
-        # is this the best sequence?
-        if price > best_haul:
-            best_haul = price
+        checked_seqs.add(seq)
+        # check for sequence in the rest of the sellers
+        for other_seller in seller_map:
+            if other_seller is seller:
+                continue
+            price += other_seller.get(seq, 0)
+        if price > best_price:
+            best_price = price
             best_seq = seq
-            print(f"A new best sequence has been found: {seq} with a total of {price} bananas")
-        
-        # update progress bar - this is going to take a while I can't think of any way around it
-        bar()
 
-print(f"The best sequence for the monkey to act on is {best_seq}, yielding {best_haul} bananas")
+
+print(f"The best sequence for the monkey to act on is {best_seq}, yielding {best_price} bananas")
