@@ -3,7 +3,19 @@
 # Start Time: 6:31 PM
 # Pt 1 End Time: 7:12 PM (41 min)
 
+# Pt 2 Start Time: 10:17 PM
+# Pt 2 End Time: 10:47 PM (30 min)
+
 import itertools
+from functools import cache
+
+@cache
+def factors(n:int): # quick utility for getting factors of a number
+    ret = {1,n}
+    for i in range(1,n//2+1):
+        if n%i==0:
+            ret |= {i,n//i}
+    return ret
 
 with open("Day 2/Day2_Input.txt", "rt") as f:
     input_txt = f.readline()
@@ -18,37 +30,36 @@ with open("Day 2/Day2_Input.txt", "rt") as f:
     print(f"total IDs to check is {total_to_check}") # real input: 2245793. Feasible for exhaustive!
 
     # find and sum up all invalid ids
-    invalids = 0
+    pt1_invalids = 0
+    pt2_invalids = 0
     for a,b in input_ranges:
         for ID in range(a,b+1):
             next_id = False
+
+            # PT 1 solver
             sID = str(ID)
             bA = sID[0:len(sID)//2] # bisect on midpoint
             bB = sID[len(sID)//2:]
 
-            if len(sID)%2 ==1: # odd number of digits, not possible for perfect repetition!
-                continue
+            # if len(sID)%2 ==1: # odd number of digits, not possible for perfect repetition! NOT true under pt 2 rules
+            #     continue
 
             if bA == bB:
-                invalids += ID
-                print(f"found invalid ID {ID}")
+                pt1_invalids += ID
+                # print(f"found invalid ID {ID}")
 
-            ## whoops went too complex, looking for any repeated pieces, not just repeats by bisection
-            # i'll keep incase pt 2 is this :P
-            # digits = tuple(map(int, str(ID)))
-            # max_chunk_length = len(digits)//2
+            # PT 2 solver - looking for chunks repeated more than twice!
+            digits = tuple(map(int, str(ID)))
 
-            # for chunk_len in range(2,max_chunk_length+1):
-            #     chunks = tuple(itertools.batched(digits, chunk_len))
+            for chunk_len in sorted(factors(len(digits))-{len(digits)}):
+                chunks = tuple(itertools.batched(digits, chunk_len))
+                reduced_chunks = set(chunks) # set will remove all repeated elements
+                if len(reduced_chunks)==1:
+                    print(f"{ID} is invalid!, found {''.join(map(str, reduced_chunks.pop()))}")
+                    pt2_invalids += ID
 
-            #     for ca, cb in zip(chunks, chunks[1:]):
-            #         if ca==cb:
-            #             print(f"{ID} is invalid!, found {''.join(map(str, ca))}")
-            #             invalids += ID
-            #             next_id = True
-            #             break
+                    break # no need to keep checking this ID
 
-            #     if next_id:
-            #         break
 
-    print(f"sum of invalid IDs (pt 1 solution): {invalids}")
+    print(f"sum of invalid IDs (pt 1 solution): {pt1_invalids}")
+    print(f"sum of invalid IDs (pt 2 solution): {pt2_invalids}")
