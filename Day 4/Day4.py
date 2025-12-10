@@ -15,14 +15,29 @@ with open("Day 4/Day4_Input.txt", "rt") as f:
     for line in f.readlines():
         warehouse.append(list(map(int, line.replace(".", "0").replace("@", "1").strip())))
     warehouse = np.array(warehouse)
+    print("input parsed...")
 
-# convolve to count neighbors
-neighbor_mask = np.array([[1,1,1], [1,0,1], [1,1,1]])
-neighbor_map = convolve2d(warehouse, neighbor_mask, mode='same')
+pt1_done = False
+cleared_cells = 0
+while True:
+    # convolve to count neighbors
+    neighbor_mask = np.array([[1,1,1], [1,0,1], [1,1,1]])
+    neighbor_map = convolve2d(warehouse, neighbor_mask, mode='same')
 
-# count occupied cells with <4 neighbors
-accessible_map = (neighbor_map<4).astype(int) * warehouse
-accessible_cells = np.count_nonzero(accessible_map)
-# print(accessible_map)
-print(f"Pt 1: There are {accessible_cells} rolls a forklift can access")
+    # count occupied cells with <4 neighbors
+    accessible_map = (neighbor_map<4).astype(int) * warehouse
+    accessible_cells = np.count_nonzero(accessible_map)
+    # print(accessible_map)
 
+    if not pt1_done:
+        print(f"Pt 1: There are {accessible_cells} rolls a forklift can access")
+        pt1_done = True
+
+    # PT 2: Now remove the accessible cellsand  try again!
+    warehouse -= accessible_map
+    cleared_cells += accessible_cells
+
+    if accessible_cells == 0:
+        break
+
+print(f"Pt 2: There are {cleared_cells} rolls a forklift can access and remove later")
