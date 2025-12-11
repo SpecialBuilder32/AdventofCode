@@ -3,6 +3,7 @@
 
 # Pt 1 Start Time: 11:36 PM
 # Pt 2 Start Time: 11:56 PM (20min)
+# Pt 2: End Time: 12:04 PM (8min)
 
 import numpy as np
 from scipy.signal import convolve2d
