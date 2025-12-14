@@ -3,6 +3,8 @@
 
 # Pt 1 Start Time: 10:16 PM
 # Pt 1 End Time: 11:07 PM
+# Pt 2 Start Time: 5:43 PM
+# Pt 2 End Time: 5:59 PM (16 min)
 
 import re
 from dataclasses import dataclass
@@ -41,3 +43,28 @@ for problem in problems:
     total_sol += problem.op_func()(problem.values)
 
 print(f"Pt1: Total problems sum {total_sol}")
+
+# part 2 requires re-parsing entirely
+columns = zip(*intext[0:-1])
+ops = iter(intext[-1].split())
+
+pt2_problems = []
+curr_prob = Problem([])
+for column in columns:
+    if all(e in (" ","\n") for e in column):
+        # end of current problem
+        curr_prob.op = next(ops)
+        pt2_problems.append(curr_prob)
+        curr_prob = Problem([])
+        continue
+
+    # otherwise its a value
+    curr_prob.values.append(int("".join(column)))
+
+# print(pt2_problems)
+# process problems
+total_sol_pt2 = 0
+for problem in pt2_problems:
+    total_sol_pt2 += problem.op_func()(problem.values)
+
+print(f"Pt2: Total problems sum {total_sol_pt2}")
