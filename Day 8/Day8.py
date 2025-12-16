@@ -3,6 +3,8 @@
 
 # Pt 1 Start Time: 3:28 PM - 4:00 PM
     # 9:53 AM - 11:22 AM; still debugging
+    # 2:10 PM - 2:19 PM; I only updated x or y's membership list, not the whole set that is getting merged
+    # Total time: 2hr 10min
 
 import numpy as np
 from math import prod
@@ -38,6 +40,7 @@ new_network_id = 1000
 for x,y in zip(*indx_incr_distance):
     x = int(x)
     y = int(y)
+
     if distances_matrix[x,y] == np.inf or max_connections <= 0:
         break # we've processed all the boxes, quit
 
@@ -74,12 +77,24 @@ for x,y in zip(*indx_incr_distance):
         del_id = netyid if netxid > -1 else netxid
         networks[merge_into_id] = netx|nety
         network_membership[x] = network_membership[y] = merge_into_id
+        for connected_id in networks.get(del_id,{}):
+            network_membership[connected_id] = merge_into_id
         networks.pop(del_id, None)
         
     # print(networks)
     max_connections -= 1
 
-print(networks)
+# print(networks)
 netwk_sizes = sorted(map(len, networks.values()), reverse=True)
 pt1_answer = prod(netwk_sizes[0:3])
 print(f"Pt1: Product of 3 largest circuits is {pt1_answer}")
+
+# check solution
+    # each number should show up in exactly one set
+# counts = {}
+# for netwk in networks.values():
+#     for junc in netwk:
+#         counts.setdefault(junc, 0)
+#         counts[junc] += 1
+
+# print(sorted(counts.items(),key=lambda e:e[1], reverse=True)[0:5])    #found : [(948, 2), (1, 2), (825, 2), (788, 2), (642, 2)]
